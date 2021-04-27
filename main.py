@@ -228,7 +228,7 @@ class HFSS:
 
         '''store csv file in certain location'''
         file_name = "Normalized_Bistatic_RCS_e_"+str(eox)+str(eoy)+str(eoz)+"_phi_"+str(phi)+"_theta_"+str(theta)+".csv"
-        _base_path = os.getcwd()
+
         #_path = os.path.join(_base_path,"rcs_plot_diff_direction")
         #_path = os.path.join(_base_path,"whole_data_rcs_plot")
         _path = os.path.join(path,file_name)
@@ -289,7 +289,7 @@ class HFSS:
         #oModule.CopyNamedExprToStack("Vector_E")
         #oModule.CopyNamedExprToStack("ComplexMag_E")
 
-        _path = os.path.join(base_path,'datatype_{}.fld'.format(type))
+        _path = os.path.join(base_path,'datatype_{}_phase_{}.fld'.format(type,phase))
         oModule.ExportOnGrid(_path, [start_x, start_y, start_z], [end_x, end_y, end_z], [step_x, step_y, step_z], "Setup1 : Sweep",
                              ["Freq:="		, _Frequency,
                               "Phase:="		, str(phase)+"deg",
@@ -355,18 +355,16 @@ def eval_boundary_Point(a,b,d,er,m,n,p):
 def creat_Model():
     #create folders
     _base_path = os.getcwd()
-    _e_path = os.path.join(_base_path, 'TM_test')
+    _e_path = os.path.join(_base_path, 'Generate_data')
     if not os.path.exists(_e_path):
         os.mkdir(_e_path)
-    _rcs_path = os.path.join(_base_path,"TM_rcs")
+    _rcs_path = os.path.join(_base_path,"RCS_result")
     _phase_path = os.path.join(_base_path,'phase.fld')
     if not os.path.exists(_rcs_path):
         os.mkdir(_rcs_path)
-    #x = 9.5
-    #y = 13.5
-    #z = 5.5
-    x = 13.5
-    y = 14.175
+
+    x = 9.5
+    y = 13.5
     z = 5.5
     er = 45
 
@@ -376,12 +374,7 @@ def creat_Model():
             #width = round(y*(0.9+0.05*w),3)
             #height = round(z*(0.9+0.05*g),3)
             #dimension_folder_name = "width_"+str(width)+"_height_"+str(height)
-            '''
-            if w < 2:
-                length = round(x*(0.9+0.05*w),3)
-            else:
-                length = round(x*(0.95+0.05*w),3)
-            '''
+
             length = x
             #width = round(y*(0.9+0.05*w),3)
             width = y
@@ -531,25 +524,16 @@ def creat_Model():
                 os.mkdir(_field_path)
                 try:
                     for f in range(len(frequency)):
-                        original_phase = 0
-                        original_mag = 0
-                        for p in range(36):
-                            phase = p*10
-                            mag = h.integrate(frequency[f],length,width,height,phase,_phase_path)
-                            if mag > original_mag:
-                                original_mag = mag
-                                original_phase = phase
-                            #read mag data & compare & export in certain phase
                         norm_frequency = frequency[f]
                         norm_frequency = round(norm_frequency,3)
-                        whole_data_path = os.path.join(_field_path,"phase{}_peak{}_frequency{}".format(original_phase,f,norm_frequency))
+                        whole_data_path = os.path.join(_field_path,"peak{}_frequency{}".format(f,norm_frequency))
                         os.mkdir(whole_data_path)
-                        h.export(frequency[f],length,width,height,whole_data_path,original_phase,"Mag_E")
-                        #h.export(frequency[f],x,y,z,whole_data_path,original_phase,"ComplexMag_E")
-                        h.export(frequency[f],length,width,height,whole_data_path,original_phase,"Vector_E")
-                        h.export(frequency[f],length,width,height,whole_data_path,original_phase,"Mag_H")
-                        h.export(frequency[f],length,width,height,whole_data_path,original_phase,"Vector_H")
-                    #print("e_"+str(eox)+str(eoy)+str(eoz)+"_phi_"+str(phi)+"_theta"+str(theta))
+                        os.mkdir(os.path.join(whole_data_path,'Vector_E'))
+                        os.mkdir(os.path.join(whole_data_path,'Vector_H'))
+                        for p in range(10):
+                            phase = p*36
+                            h.export(frequency[f],length,width,height,os.path.join(whole_data_path,'Vector_E'),phase,"Vector_E")
+                            h.export(frequency[f],length,width,height,os.path.join(whole_data_path,'Vector_H'),phase,"Vector_H")
                 except IOError:
                     print("Cannot export")
 
